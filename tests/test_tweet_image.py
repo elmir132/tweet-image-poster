@@ -3,6 +3,7 @@ import sys
 import tempfile
 import types
 import unittest
+from io import StringIO
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import tweet_image as t
@@ -160,6 +161,18 @@ class CliTests(unittest.TestCase):
             self.assertEqual(t.main(["-f", path, "--send"], functions=fns), 0)
         self.assertEqual(sent, ["from file"])
         self.assertEqual(t.main(["-f", "/no/such/file"]), 2)
+
+    def test_text_from_stdin_does_not_close_stdin(self):
+        original = t.sys.stdin
+        t.sys.stdin = StringIO("from stdin\n")
+        try:
+            self.assertEqual(t.main(["-f", "-"]), 0)
+            self.assertFalse(t.sys.stdin.closed)
+        finally:
+            t.sys.stdin = original
+
+    def test_positional_text_and_file_are_rejected_together(self):
+        self.assertEqual(t.main(["inline", "--file", "-"]), 2)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,10 @@ python tweet_image.py -f post.txt -i a.png -i b.png --alt "first" --alt "second"
 python tweet_image.py "Replying" --reply-to 1234567890 --send
 ```
 
+Give text either as the positional argument or with `--file`, not both. Use
+`--file -` to read the post from standard input; the tool does not close the
+caller's stdin stream.
+
 After `pip install .` the command is also available as `tweet-image`.
 
 Without `--send` it only checks the post and prints what it would do.

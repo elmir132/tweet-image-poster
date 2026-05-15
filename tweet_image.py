@@ -116,9 +116,10 @@ def _tweepy_functions(env=None):
 
 
 def read_text(arg_text, file_path):
+    if file_path == "-":
+        return sys.stdin.read().strip()
     if file_path:
-        source = sys.stdin if file_path == "-" else open(file_path, encoding="utf-8")
-        with source:
+        with open(file_path, encoding="utf-8") as source:
             return source.read().strip()
     return arg_text
 
@@ -133,6 +134,9 @@ def main(argv=None, functions=None):
     ap.add_argument("--send", action="store_true", help="actually post (default is a dry run)")
     args = ap.parse_args(argv)
 
+    if args.file and args.text:
+        print("error: give text either as an argument or with --file, not both", file=sys.stderr)
+        return 2
     try:
         text = read_text(args.text, args.file)
     except OSError as err:
