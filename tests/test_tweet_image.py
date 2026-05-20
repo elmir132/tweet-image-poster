@@ -9,10 +9,16 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import tweet_image as t
 
 
-def make_file(directory, name, size=10):
+HEADERS = {".png": b"\x89PNG\r\n\x1a\n", ".jpg": b"\xff\xd8\xff", ".jpeg": b"\xff\xd8\xff",
+           ".gif": b"GIF89a", ".webp": b"RIFF\x00\x00\x00\x00WEBP"}
+
+
+def make_file(directory, name, size=10, valid=True):
     path = os.path.join(directory, name)
+    ext = os.path.splitext(name)[1].lower()
+    head = HEADERS.get(ext, b"") if valid else b""
     with open(path, "wb") as fh:
-        fh.write(b"x" * size)
+        fh.write(head + b"x" * max(0, size - len(head)))
     return path
 
 
@@ -64,6 +70,15 @@ class ValidateTests(unittest.TestCase):
     def test_size_limit(self):
         big = make_file(self.dir.name, "big.png", 5 * 1024 * 1024 + 1)
         self.assertTrue(any("larger than 5 MB" in p for p in t.validate("x", [big])))
+
+    def test_renamed_text_file_is_rejected(self):
+        fake = make_file(self.dir.name, "fake.png", valid=False)
+        self.assertTrue(any("not a real .png" in p for p in t.validate("x", [fake])))
+
+    def test_real_headers_accepted_for_every_type(self):
+        files = [make_file(self.dir.name, n) for n in ("a.png", "b.jpg", "c.jpeg", "d.webp")]
+        self.assertEqual(t.validate("x", files[:4]), [])
+        self.assertEqual(t.validate("x", [make_file(self.dir.name, "g.gif")]), [])
 
     def test_gif_cannot_mix(self):
         files = [make_file(self.dir.name, "a.gif"), make_file(self.dir.name, "b.png")]

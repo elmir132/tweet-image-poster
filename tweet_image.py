@@ -16,6 +16,12 @@ MAX_ALT = 1000
 SIZE_LIMITS = {".jpg": 5, ".jpeg": 5, ".png": 5, ".webp": 5, ".gif": 15}  # MB
 ENV_KEYS = ("TWITTER_API_KEY", "TWITTER_API_SECRET", "TWITTER_ACCESS_TOKEN", "TWITTER_ACCESS_SECRET")
 URL_RE = re.compile(r"https?://\S+")
+SIGNATURES = {
+    ".png": (b"\x89PNG\r\n\x1a\n",),
+    ".jpg": (b"\xff\xd8\xff",),
+    ".jpeg": (b"\xff\xd8\xff",),
+    ".gif": (b"GIF87a", b"GIF89a"),
+}
 
 
 class ValidationError(ValueError):
@@ -39,6 +45,15 @@ def weighted_length(text):
     return URL_WEIGHT * len(urls) + sum(_char_weight(c) for c in rest)
 
 
+def looks_like(path, ext):
+    """True if the file starts with the magic bytes of its extension (not a renamed text file)."""
+    with open(path, "rb") as fh:
+        head = fh.read(12)
+    if ext == ".webp":
+        return head[:4] == b"RIFF" and head[8:12] == b"WEBP"
+    return any(head.startswith(sig) for sig in SIGNATURES[ext])
+
+
 def validate(text, images, alts=None, reply_to=None):
     """Return a list of problems; an empty list means the post is valid."""
     problems = []
@@ -59,6 +74,8 @@ def validate(text, images, alts=None, reply_to=None):
             problems.append(f"{path}: file not found")
         elif os.path.getsize(path) > SIZE_LIMITS[ext] * 1024 * 1024:
             problems.append(f"{path}: larger than {SIZE_LIMITS[ext]} MB")
+        elif not looks_like(path, ext):
+            problems.append(f"{path}: content is not a real {ext} image")
     for alt in alts or []:
         if len(alt) > MAX_ALT:
             problems.append(f"alt text is {len(alt)} characters, the limit is {MAX_ALT}")
