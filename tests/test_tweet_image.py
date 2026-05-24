@@ -116,6 +116,12 @@ class PostTests(unittest.TestCase):
         t.post("hi", [], [], upload=None, create=lambda text, ids, reply: seen.append(ids) or "1")
         self.assertEqual(seen, [None])
 
+    def test_media_only_post_sends_no_text(self):
+        seen = []
+        t.post("", ["a.png"], [], upload=lambda p: "m",
+               create=lambda text, ids, reply: seen.append((text, ids)) or "1")
+        self.assertEqual(seen, [(None, ["m"])])
+
     def test_alt_goes_to_the_right_image_even_with_duplicate_paths(self):
         alts = []
         t.post("hi", ["a.png", "a.png"], ["first", "second"],

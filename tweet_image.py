@@ -108,7 +108,7 @@ def post(text, images, alts, upload, create, set_alt=None, reply_to=None):
         if alt and set_alt:
             set_alt(media_id, alt)
         media_ids.append(media_id)
-    return create(text, media_ids or None, reply_to)
+    return create(text or None, media_ids or None, reply_to)
 
 
 def _tweepy_functions(env=None):
