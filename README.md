@@ -25,11 +25,12 @@ Without `--send` it only checks the post and prints what it would do.
 
 ## What it checks before sending
 
-- text within X's 280 weight limit, counted as X counts it: each URL is 23, emoji and CJK characters are 2; and at least text or one image
+- text within X's 280 weight limit, counted as X counts it: each link (with `https://` or a bare domain on a common TLD such as `example.com`) is 23, emoji and CJK characters are 2; and at least text or one image
 - at most 4 images; `.jpg`, `.jpeg`, `.png`, `.webp` up to 5 MB, `.gif` up to 15 MB
 - a GIF is not mixed with other images
 - alt text of at most 1000 characters, no more alt texts than images, matched to images by position
 - `--reply-to` is a numeric tweet id
+- images are checked by their first bytes, so a renamed text file is rejected
 - all four credential variables are set (the error names the missing ones, never their values)
 
 ## Tests

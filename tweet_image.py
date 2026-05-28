@@ -15,7 +15,10 @@ MAX_IMAGES = 4
 MAX_ALT = 1000
 SIZE_LIMITS = {".jpg": 5, ".jpeg": 5, ".png": 5, ".webp": 5, ".gif": 15}  # MB
 ENV_KEYS = ("TWITTER_API_KEY", "TWITTER_API_SECRET", "TWITTER_ACCESS_TOKEN", "TWITTER_ACCESS_SECRET")
-URL_RE = re.compile(r"https?://\S+")
+TLDS = ("com|org|net|io|co|ai|app|dev|edu|gov|me|ly|xyz|info|us|uk|de|fr|nl|eu|ca|au|tv|gg|so|sh|to|be|ua|az")
+# A link with a scheme, or a bare domain on a known TLD (with an optional path).
+# The TLD list is deliberate: it keeps "file.py" or "node.js" from counting as links.
+URL_RE = re.compile(r"https?://\S+|\b(?:[a-z0-9-]+\.)+(?:" + TLDS + r")\b(?:/\S*)?", re.IGNORECASE)
 SIGNATURES = {
     ".png": (b"\x89PNG\r\n\x1a\n",),
     ".jpg": (b"\xff\xd8\xff",),

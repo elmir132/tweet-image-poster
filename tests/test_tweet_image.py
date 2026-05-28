@@ -43,6 +43,17 @@ class ValidateTests(unittest.TestCase):
         self.assertEqual(t.validate("a" * 256 + " " + url, []), [])  # 256 + 1 + 23 = 280
         self.assertTrue(t.validate("a" * 257 + " " + url, []))  # 281
 
+    def test_bare_domains_count_23(self):
+        self.assertEqual(t.weighted_length("a.co"), 23)
+        self.assertEqual(t.weighted_length("example.com/some/long/path/here"), 23)
+        self.assertEqual(t.weighted_length("see example.com now"), 4 + 23 + 4)
+        self.assertEqual(t.weighted_length("https://x.com/a b.org"), 23 + 1 + 23)
+
+    def test_file_names_are_not_links(self):
+        self.assertEqual(t.weighted_length("file.py"), 7)
+        self.assertEqual(t.weighted_length("node.js"), 7)
+        self.assertEqual(t.weighted_length("v1.2.3"), 6)
+
     def test_emoji_and_cjk_count_2(self):
         self.assertEqual(t.weighted_length("\U0001F600"), 2)
         self.assertEqual(t.weighted_length("\u4f60\u597d"), 4)
