@@ -8,6 +8,9 @@ from io import StringIO
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 import tweet_image as t
 
+# Safety net: no test may ever write to the real ~/.tweet-image post log.
+os.environ["TWEET_IMAGE_LOG"] = os.path.join(tempfile.mkdtemp(prefix="tweet-image-test-"), "posted.jsonl")
+
 
 HEADERS = {".png": b"\x89PNG\r\n\x1a\n", ".jpg": b"\xff\xd8\xff", ".jpeg": b"\xff\xd8\xff",
            ".gif": b"GIF89a", ".webp": b"RIFF\x00\x00\x00\x00WEBP"}
@@ -154,6 +157,14 @@ class PostTests(unittest.TestCase):
 
 
 class CliTests(unittest.TestCase):
+    def setUp(self):
+        # a fresh post log per test, so the duplicate check never links two tests together
+        log_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(log_dir.cleanup)
+        saved = os.environ.get("TWEET_IMAGE_LOG")
+        os.environ["TWEET_IMAGE_LOG"] = os.path.join(log_dir.name, "posted.jsonl")
+        self.addCleanup(os.environ.__setitem__, "TWEET_IMAGE_LOG", saved)
+
     def test_dry_run_sends_nothing(self):
         self.assertEqual(t.main(["hello"]), 0)
 
